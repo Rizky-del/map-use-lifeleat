@@ -14,7 +14,7 @@
             margin-bottom: 10px;
         }
 
-	#search-input {
+	.wadah-tempat-searching {
 	    display: none;
 	}
 
@@ -31,8 +31,10 @@
         </div>
         <div class="col-sm-1"><b>:</b></div>
         <div class="col-sm-8">
-	    <label>Searching Lokasi ( Walau Tidak Begitu Akurat ).</label>
-            <input id="search-input" type="text" name="isi_data_titik_koordinat" class="bare-text form-control">
+	    <div class="wadah-tempat-searching">
+	    	<label>Searching Lokasi ( Walau Tidak Begitu Akurat ).</label>
+	    	<input id="search-input" type="text" name="isi_data_titik_koordinat" class="bare-text form-control">
+	    </div>
             <br>
             <div id="map" class="khusus-insert-koordinat"></div>
             <div class="col-sm-9" id="style-input-titik_koordinat">
@@ -74,7 +76,7 @@
         // Show/hide map on button click
         $(".tombol-insert-koordinat").click(function(){
             $(".khusus-insert-koordinat").toggle();
-	    $("#search-input").toggle();
+	    $(".wadah-tempat-searching").toggle();
             map.invalidateSize();
         });
 
@@ -116,7 +118,7 @@
                 });
             },
             select: function(event, ui) {
-                console.log("Autocomplete select:", ui.item);
+                // console.log("Autocomplete select:", ui.item);
                 const { lat, lon } = ui.item;
                 const latlng = new L.LatLng(lat, lon);
                 if (marker) {
