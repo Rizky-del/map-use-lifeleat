@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map with Search</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <style>
+        #map {
+            height: 400px;
+            display: none;
+            margin-bottom: 10px;
+        }
+
+        .ui-autocomplete {
+            z-index: 1050;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="col-sm-12 row field-container mt-5">
+        <div class="col-sm-3 ps-5">
+            I. Titik Koordinat
+        </div>
+        <div class="col-sm-1"><b>:</b></div>
+        <div class="col-sm-8">
+	    <label>Searching Lokasi ( Walau Tidak Begitu Akurat ).</label>
+            <input id="search-input" type="text" name="isi_data_titik_koordinat" class="bare-text form-control">
+            <br>
+            <div id="map" class="khusus-insert-koordinat"></div>
+            <div class="col-sm-9" id="style-input-titik_koordinat">
+                <input type="text" name="titik_koordinat" class="bare-text form-control input-long-lat">
+            </div>
+            <div class="col-sm-3">
+                <button title="Lihat Map" class="btn btn-primary tombol-insert-koordinat mt-3">
+                    Pilih Koordinat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([-7.8877468074594255, 110.32735899381171], 18);
+
+        // Add Google Satellite layer
+        const satelliteLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+        }).addTo(map);
+
+        // Add Google Labels layer
+        const labelsLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+        }).addTo(map);
+
+        let marker;
+
+        // Show/hide map on button click
+        $(".tombol-insert-koordinat").click(function(){
+            $(".khusus-insert-koordinat").toggle();
+            map.invalidateSize();
+        });
+
+        // Add marker on map click
+        map.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            if (marker) {
+                marker.setLatLng(e.latlng);
+            } else {
+                marker = L.marker(e.latlng).addTo(map);
+            }
+            $('.input-long-lat').val(`${lat}, ${lng}`).trigger('change');
+        });
+
+        // Search functionality
+        $("#search-input").autocomplete({
+            source: function(request, response) {
+                console.log("Autocomplete request:", request);
+                $.ajax({
+                    url: "https://nominatim.openstreetmap.org/search",
+                    dataType: "json",
+                    data: {
+                        q: request.term,
+                        format: "json",
+                        addressdetails: 1,
+                        limit: 10
+                    },
+                    success: function(data) {
+                        console.log("Autocomplete response data:", data);
+                        response($.map(data, function(item) {
+                            return {
+                                label: item.display_name,
+                                value: item.display_name,
+                                lat: item.lat,
+                                lon: item.lon
+                            };
+                        }));
+                    }
+                });
+            },
+            select: function(event, ui) {
+                console.log("Autocomplete select:", ui.item);
+                const { lat, lon } = ui.item;
+                const latlng = new L.LatLng(lat, lon);
+                if (marker) {
+                    marker.setLatLng(latlng);
+                } else {
+                    marker = L.marker(latlng).addTo(map);
+                }
+                map.setView(latlng, 18);
+                $('.input-long-lat').val(`${lat}, ${lon}`).trigger('change');
+            }
+        });
+    </script>
+</body>
+</html>
